@@ -115,6 +115,7 @@ function EInput({
   small = false,
   disabled = false,
 }: any) {
+
   const [focus, setFocus] = useState(false);
 
   const base = {
