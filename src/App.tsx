@@ -335,7 +335,7 @@ function App() {
         "INCOME FOCUS": "Income",
         INCOME: "Income",
       };
-      setPhase(phaseMap[rawPhase] || portfolioPhase || "Build");
+      setPhase((phaseMap as any)[rawPhase] || portfolioPhase || "Build");
 
       if (Array.isArray(apiPhaseControl.phases)) {
         const nextPhases = { ...DEFAULT_PHASES };
