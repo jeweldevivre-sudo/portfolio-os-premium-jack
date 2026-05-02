@@ -191,7 +191,7 @@ function CTip(props: any) {
           {label}
         </div>
       )}
-      {payload.map((p, i) => (
+      {payload.map((p: any, i: number) => (
         <div key={i} style={{ marginBottom: 3 }}>
           <span style={{ color: p.color || "#94a3b8" }}>{p.name}:</span>{" "}
           <span style={{ fontFamily: "'DM Mono', monospace" }}>
