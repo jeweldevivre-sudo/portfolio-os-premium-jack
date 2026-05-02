@@ -356,7 +356,7 @@ function App() {
           const key =
             (phaseKeyMap as any)[name.toUpperCase().replace(/\s+/g, " ")] || name;
           (nextPhases as any)[key] = {
-            ...(nextPhases[key] || {}),
+            ...((nextPhases as any)[key] || {}),
             dividendPct,
             growthPct,
             monthlyGrowth: nextPhases[key]?.monthlyGrowth || 15000,
