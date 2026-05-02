@@ -171,7 +171,7 @@ function EInput({
   );
 }
 
-function CTip(props: any) { {
+function CTip(props: any) { 
   const { active, payload, label } = props || {};
   if (!active || !payload?.length) return null;
   return (
