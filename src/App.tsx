@@ -45,7 +45,7 @@ const EMPTY_HOLDING = {
 
 const HOLDING_TYPES = ["Dividend", "Growth", "Other"];
 
-const normalizeHoldingType = (...values) => {
+const normalizeHoldingType = (...values: any[]) => {
   for (const value of values) {
     const text = String(value ?? "")
       .trim()
