@@ -243,8 +243,8 @@ function App() {
 
   const [buyOrders, setBuyOrders] = useState([]);
   const [sellOrders, setSellOrders] = useState([]);
-  const [originalPortfolioSymbols, setOriginalPortfolioSymbols] = useState([]);
-  const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState([]);
+const [originalPortfolioSymbols, setOriginalPortfolioSymbols] = useState<string[]>([]);
+const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>([]);
   const [decisionSaved, setDecisionSaved] = useState(false);
   const [decisionForm, setDecisionForm] = useState({
     assetCode: "",
