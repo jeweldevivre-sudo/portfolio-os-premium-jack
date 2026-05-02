@@ -148,7 +148,7 @@ function EInput({
           cursor: disabled ? "not-allowed" : "pointer",
         }}
       >
-        {options.map((o) => (
+        {options.map((o: any) => (
           <option key={o} value={o}>
             {o}
           </option>
