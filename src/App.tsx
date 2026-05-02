@@ -509,19 +509,19 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
   const growGap = growPct - phaseData.growthPct;
   const needRebal = Math.abs(divGap) > 5;
 
-  const totalBuyCash = num(
-    summary.totalBuyNeed ?? summary.total_buy_need ?? summary.buyNeed
-  );
+const totalBuyCash = num(
+  (summary as any).totalBuyNeed ?? (summary as any).total_buy_need ?? (summary as any).buyNeed
+);
   const growthSellCash = num(
-    summary.growthSell ??
-      summary.growth_sell ??
-      summary.totalSellValue ??
-      summary.total_sell_value
-  );
-  const remainingNeedCash = num(
-    summary.remainingNeed ?? summary.remaining_need
-  );
+  (summary as any).growthSell ??
+    (summary as any).growth_sell ??
+    (summary as any).totalSellValue ??
+    (summary as any).total_sell_value
+);
 
+const remainingNeedCash = num(
+  (summary as any).remainingNeed ?? (summary as any).remaining_need
+);
   const updateHolding = (i, f, v) => {
     const n = [...holdings];
     n[i] = { ...n[i], [f]: v };
