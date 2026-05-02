@@ -241,8 +241,8 @@ function App() {
     remainingNeed: 0,
   });
 
-  const [buyOrders, setBuyOrders] = useState([]);
-  const [sellOrders, setSellOrders] = useState([]);
+ const [buyOrders, setBuyOrders] = useState<any[]>([]);
+const [sellOrders, setSellOrders] = useState<any[]>([]);
 const [originalPortfolioSymbols, setOriginalPortfolioSymbols] = useState<string[]>([]);
 const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>([]);
   const [decisionSaved, setDecisionSaved] = useState(false);
