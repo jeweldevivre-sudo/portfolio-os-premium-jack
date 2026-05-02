@@ -354,8 +354,8 @@ function App() {
             "INCOME FOCUS": "Income",
           };
           const key =
-            phaseKeyMap[name.toUpperCase().replace(/\s+/g, " ")] || name;
-          nextPhases[key] = {
+            (phaseKeyMap as any)[name.toUpperCase().replace(/\s+/g, " ")] || name;
+          (nextPhases as any)[key] = {
             ...(nextPhases[key] || {}),
             dividendPct,
             growthPct,
