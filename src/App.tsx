@@ -502,7 +502,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
   const totalCost = computed.reduce((s, h) => s + h.cost, 0);
   const totalGLPct = totalCost > 0 ? (totalGL / totalCost) * 100 : 0;
 
-  const phaseData = phases[phase] || phases.Build;
+  const phaseData = (phases as any)[phase] || phases.Build;
   const divPct = equityValue > 0 ? (divValue / equityValue) * 100 : 0;
   const growPct = equityValue > 0 ? (growValue / equityValue) * 100 : 0;
   const divGap = divPct - phaseData.dividendPct;
