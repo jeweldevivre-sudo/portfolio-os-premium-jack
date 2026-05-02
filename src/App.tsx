@@ -100,7 +100,7 @@ const targetPct = (v: any) => {
   return n <= 1 ? n * 100 : n;
 };
 
-const fmtPct = (v, d = 0) => {
+const fmtPct = (v: any, d: number = 0) => {
   const pct = targetPct(v);
   return pct > 0 ? `${fmt(pct, d)}%` : "—";
 };
