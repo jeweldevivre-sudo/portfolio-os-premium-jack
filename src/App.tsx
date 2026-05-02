@@ -78,14 +78,14 @@ const typeBadgeStyle = (type: unknown) => {
   return { background: "#444", color: "#fff" };
 };
 const fmt = (n: any, d: number = 2) => {
-  isNaN(n) || n === null || n === ""
+  return isNaN(n) || n === null || n === ""
     ? "—"
     : Number(n).toLocaleString("th-TH", {
         minimumFractionDigits: d,
         maximumFractionDigits: d,
       });
-
-const fmtB = (n) =>
+};
+const fmtB = (n: any) =>
   n >= 1000000
     ? `${fmt(n / 1000000)}M`
     : n >= 1000
@@ -202,7 +202,8 @@ function CTip(props) {
   );
 }
 
-export default function App() {
+
+function App() {
   const [tab, setTab] = useState("dashboard");
   const [phase, setPhase] = useState("Build");
   const [holdings, setHoldings] = useState(
