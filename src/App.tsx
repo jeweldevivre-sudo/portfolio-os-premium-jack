@@ -64,29 +64,19 @@ const normalizeHoldingType = (...values: any[]) => {
   return "Other";
 };
 
-const typeBadgeStyle = (type) => {
+const typeBadgeStyle = (type: unknown) => {
   const t = normalizeHoldingType(type);
-  if (t === "Dividend") {
-    return {
-      background: "#07261c",
-      color: "#34d399",
-      border: "1px solid #0d5a3d",
-    };
-  }
-  if (t === "Growth") {
-    return {
-      background: "#0b1e37",
-      color: "#60a5fa",
-      border: "1px solid #234980",
-    };
-  }
-  return {
-    background: "#111827",
-    color: "#93a4bb",
-    border: "1px solid #334155",
-  };
-};
 
+  if (t === "Dividend") {
+    return { background: "#1f8b4c", color: "#fff" };
+  }
+
+  if (t === "Growth") {
+    return { background: "#1f4c8b", color: "#fff" };
+  }
+
+  return { background: "#444", color: "#fff" };
+};
 const fmt = (n, d = 2) =>
   isNaN(n) || n === null || n === ""
     ? "—"
