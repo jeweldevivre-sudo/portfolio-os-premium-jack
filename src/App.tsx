@@ -668,7 +668,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       setLoggedOrderIds((prev) => [...prev, orderId]);
       setDecisionSaved(true);
       setTimeout(() => setDecisionSaved(false), 2000);
-    catch (err: any)
+    } catch (err: any) {
       console.error("Order decision save error:", err);
       setLoadError(err.message || "Order decision save error");
       alert(`Save order decision failed: ${err.message || "Unknown error"}`);
@@ -747,7 +747,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       });
 
       await loadPortfolioFromSheet();
-    catch (err: any)
+    } catch (err: any) {
       console.error("Decision log save error:", err);
       setLoadError(err.message || "Decision log save error");
       alert(`Save record failed: ${err.message || "Unknown error"}`);
@@ -860,7 +860,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       setDeletedPortfolioSymbols([]);
 
       await loadPortfolioFromSheet();
-    catch (err: any)
+    } catch (err: any) {
       console.error("Save error:", err);
       setLoadError(err.message || "Save error");
       alert(`Save failed: ${err.message || "Unknown error"}`);
@@ -915,7 +915,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       await loadPortfolioFromSheet();
-    catch (err: any)
+    } catch (err: any) {
       console.error("Save targets error:", err);
       setLoadError(err.message || "Save targets error");
       alert(`Save targets failed: ${err.message || "Unknown error"}`);
