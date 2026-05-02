@@ -92,9 +92,9 @@ const fmtB = (n: any) =>
     ? `${fmt(n / 1000, 1)}K`
     : fmt(n);
 
-const num = (v) => parseFloat(String(v).replace(/,/g, "")) || 0;
+const num = (v: any) => parseFloat(String(v).replace(/,/g, "")) || 0;
 
-const targetPct = (v) => {
+const targetPct = (v: any) => {
   const n = num(v);
   if (!n) return 0;
   return n <= 1 ? n * 100 : n;
