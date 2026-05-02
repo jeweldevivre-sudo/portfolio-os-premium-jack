@@ -354,13 +354,14 @@ function App() {
             "INCOME FOCUS": "Income",
           };
           const key =
-            (phaseKeyMap as any)[name.toUpperCase().replace(/\s+/g, " ")] || name;
-          (nextPhases as any)[key] = {
-            ...((nextPhases as any)[key] || {}),
-            dividendPct,
-            growthPct,
-            monthlyGrowth: nextPhases[key]?.monthlyGrowth || 15000,
-          };
+  (phaseKeyMap as any)[name.toUpperCase().replace(/\s+/g, " ")] || name;
+
+(nextPhases as any)[key] = {
+  ...((nextPhases as any)[key] || {}),
+  dividendPct,
+  growthPct,
+  monthlyGrowth: (nextPhases as any)[key]?.monthlyGrowth || 15000,
+};
         });
         setPhases(nextPhases);
       }
