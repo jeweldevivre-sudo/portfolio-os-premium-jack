@@ -114,7 +114,7 @@ function EInput({
   width = "100%",
   small = false,
   disabled = false,
-}) {
+}: any) {
   const [focus, setFocus] = useState(false);
 
   const base = {
@@ -170,7 +170,7 @@ function EInput({
   );
 }
 
-function CTip(props) {
+function CTip(props: any) { {
   const { active, payload, label } = props || {};
   if (!active || !payload?.length) return null;
   return (
