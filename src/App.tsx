@@ -77,7 +77,7 @@ const typeBadgeStyle = (type: unknown) => {
 
   return { background: "#444", color: "#fff" };
 };
-const fmt = (n, d = 2) =>
+const fmt = (n: any, d: number = 2) => {
   isNaN(n) || n === null || n === ""
     ? "—"
     : Number(n).toLocaleString("th-TH", {
