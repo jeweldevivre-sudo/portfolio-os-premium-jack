@@ -339,7 +339,7 @@ function App() {
 
       if (Array.isArray(apiPhaseControl.phases)) {
         const nextPhases = { ...DEFAULT_PHASES };
-        apiPhaseControl.phases.forEach((p) => {
+        apiPhaseControl.phases.forEach((p: any) => {
           const name = String(p.phase || "").trim();
           if (!name) return;
           const dividendPct =
