@@ -46,6 +46,14 @@ const EMPTY_HOLDING = {
 
 const HOLDING_TYPES = ["Dividend", "Growth", "Other"];
 
+const DECISION_NOTE_OPTIONS = [
+  "Follow System",
+  "Add on Dip",
+  "Reduce Risk",
+  "Manual Override",
+  "Off-System",
+];
+
 const normalizeHoldingType = (...values: any[]) => {
   for (const value of values) {
     const text = String(value ?? "")
@@ -601,7 +609,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       actualPrice:
         current.actualPrice ??
         (order.price === "" || order.price === undefined ? "" : order.price),
-      note: current.note ?? "",
+      note: current.note ?? "Follow System",
     };
   };
 
@@ -657,7 +665,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
           suggestedPrice,
           actualPrice,
           buySellPrice: actualPrice,
-          note: edit.note || order.note || "",
+          note: edit.note || "Follow System",
         }),
       });
 
@@ -2181,13 +2189,12 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                       </div>
                     </div>
 
-                    <input
-                      value={edit.note}
+                    <select
+                      value={edit.note || "Follow System"}
                       onChange={(e) =>
                         updateOrderEdit(orderId, "note", e.target.value)
                       }
                       disabled={isLogged || !isActionableBuy}
-                      placeholder="Optional note / override reason"
                       style={{
                         width: "100%",
                         marginTop: 8,
@@ -2200,7 +2207,13 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                         padding: "8px 10px",
                         outline: "none",
                       }}
-                    />
+                    >
+                      {DECISION_NOTE_OPTIONS.map((noteOption) => (
+                        <option key={noteOption} value={noteOption}>
+                          {noteOption}
+                        </option>
+                      ))}
+                    </select>
 
                     <label
                       style={{
@@ -2585,13 +2598,12 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                           </div>
                         </div>
 
-                        <input
-                          value={edit.note}
+                        <select
+                          value={edit.note || "Follow System"}
                           onChange={(e) =>
                             updateOrderEdit(orderId, "note", e.target.value)
                           }
                           disabled={isLogged}
-                          placeholder="Optional note / override reason"
                           style={{
                             width: "100%",
                             marginTop: 8,
@@ -2604,7 +2616,13 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                             padding: "8px 10px",
                             outline: "none",
                           }}
-                        />
+                        >
+                          {DECISION_NOTE_OPTIONS.map((noteOption) => (
+                            <option key={noteOption} value={noteOption}>
+                              {noteOption}
+                            </option>
+                          ))}
+                        </select>
 
                         <label
                           style={{
