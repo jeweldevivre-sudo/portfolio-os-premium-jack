@@ -803,6 +803,10 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
             osType: normalizeHoldingType(h.type),
             units: h.units === "" ? "" : Number(h.units),
             avgCost: h.avgCost === "" ? "" : Number(h.avgCost),
+            targetWeight:
+              h.targetWeight === "" || h.targetWeight === undefined
+                ? ""
+                : targetPct(h.targetWeight) / 100,
           })),
       };
 
@@ -3205,21 +3209,17 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                                 width="72px"
                               />
                             </td>
-                            <td
-                              style={{
-                                padding: "6px 10px",
-                                textAlign: "right",
-                                fontSize: 12,
-                                fontFamily: "'DM Mono', monospace",
-                                color:
-                                  targetPct(h.targetWeight) > 0
-                                    ? "#60a5fa"
-                                    : "#64748b",
-                                fontWeight: 800,
-                                letterSpacing: "0.01em",
-                              }}
-                            >
-                              {fmtPct(h.targetWeight, 0)}
+                            <td style={{ padding: "4px 5px" }}>
+                              <EInput
+                                val={
+                                  h.targetWeight === "" || h.targetWeight === undefined
+                                    ? ""
+                                    : targetPct(h.targetWeight).toFixed(2)
+                                }
+                                onChange={(v) => updateHolding(i, "targetWeight", v)}
+                                placeholder="0.00"
+                                width="72px"
+                              />
                             </td>
                             <td
                               style={{
