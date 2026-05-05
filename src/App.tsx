@@ -19,7 +19,7 @@ import {
 } from "recharts";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbySQvFUy3TIa9e32XwwCCvbkggPRIodMD5lo_4WtrWobuzfRMs_WAx8e5TIHoU3gjRR/exec";
+  "https://script.google.com/macros/s/AKfycbyDJIM29AJyBgZ9DezLqOX-KWcLTR7af2M5XUEHzQ2HVtM-aAKH-Auw22EI2GNqECo0/exec";
 
 const DEFAULT_TARGETS = {
   totalWealth: 5000000,
