@@ -445,6 +445,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 o.cash ?? o.cashUsed ?? o.actualBuyValue ?? o.suggestedBuy ?? 0,
               status: o.status || o.statusNote || o.note || "BUY",
               note: o.note || "",
+              execute: String(o.execute || "").trim().toUpperCase(),
             }))
         );
       } else {
@@ -677,6 +678,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       setLoggedOrderIds((prev) => [...prev, orderId]);
       setDecisionSaved(true);
       setTimeout(() => setDecisionSaved(false), 2000);
+      await loadPortfolioFromSheet();
     } catch (err: any) {
       console.error("Order decision save error:", err);
       setLoadError(err.message || "Order decision save error");
@@ -1978,7 +1980,15 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 </div>
               )}
 
-              {buyOrders.map((o, i) => {
+              {buyOrders
+                .filter((o, i) => {
+                  const orderId = `BUY-${o.id || o.symbol || i}`;
+                  const executeStatus = String(o.execute || "EXECUTE")
+                    .trim()
+                    .toUpperCase();
+                  return executeStatus !== "SKIP" && !loggedOrderIds.includes(orderId);
+                })
+                .map((o, i) => {
                 const orderId = `BUY-${o.id || o.symbol || i}`;
                 const edit = getOrderEdit(o, "BUY");
                 const isLogged = loggedOrderIds.includes(orderId);
