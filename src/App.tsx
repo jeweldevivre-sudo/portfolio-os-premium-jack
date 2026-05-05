@@ -445,7 +445,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 o.cash ?? o.cashUsed ?? o.actualBuyValue ?? o.suggestedBuy ?? 0,
               status: o.status || o.statusNote || "BUY",
               note: o.note || "",
-              execute: String(o.execute || o.note || "").trim().toUpperCase(),
+              execute: String(o.execute || o.note || "EXECUTE").trim().toUpperCase(),
             }))
         );
       } else {
@@ -1033,15 +1033,6 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
     actual: m.target > 0 ? Math.min((m.current / m.target) * 100, 100) : 0,
     target: 100,
   }));
-
-  const visibleBuyOrders = buyOrders.filter((o, i) => {
-    const orderId = `BUY-${o.id || o.symbol || i}`;
-    const executeStatus = String(o.execute || o.note || "EXECUTE")
-      .trim()
-      .toUpperCase();
-
-    return executeStatus !== "SKIP" && !loggedOrderIds.includes(orderId);
-  });
 
   return (
     <div
@@ -1973,7 +1964,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 </button>
               </div>
 
-              {visibleBuyOrders.length === 0 && (
+              {buyOrders.filter((o, i) => String(o.execute || o.note || "EXECUTE").trim().toUpperCase() !== "SKIP" && !loggedOrderIds.includes(`BUY-${o.id || o.symbol || i}`)).length === 0 && (
                 <div
                   style={{
                     background: "#080e1c",
@@ -1989,7 +1980,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 </div>
               )}
 
-              {visibleBuyOrders.map((o, i) => {
+              {buyOrders.filter((o, i) => String(o.execute || o.note || "EXECUTE").trim().toUpperCase() !== "SKIP" && !loggedOrderIds.includes(`BUY-${o.id || o.symbol || i}`)).map((o, i) => {
                 const orderId = `BUY-${o.id || o.symbol || i}`;
                 const edit = getOrderEdit(o, "BUY");
                 const isLogged = loggedOrderIds.includes(orderId);
