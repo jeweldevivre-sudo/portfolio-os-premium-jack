@@ -143,7 +143,15 @@ function EInput({
   };
 
   if (options) {
-    return (
+    const visibleBuyOrders = buyOrders.filter((o, i) => {
+    const orderId = `BUY-${o.id || o.symbol || i}`;
+    const executeStatus = String(o.execute || "EXECUTE")
+      .trim()
+      .toUpperCase();
+    return executeStatus !== "SKIP" && !loggedOrderIds.includes(orderId);
+  });
+
+  return (
       <select
         value={val}
         disabled={disabled}
@@ -1964,7 +1972,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 </button>
               </div>
 
-              {buyOrders.length === 0 && (
+              {visibleBuyOrders.length === 0 && (
                 <div
                   style={{
                     background: "#080e1c",
@@ -1980,25 +1988,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 </div>
               )}
 
-              {buyOrders
-                .filter((o, i) => {
-  const orderId = `BUY-${o.id || o.symbol || i}`;
-  const executeStatus = String(o.execute || "EXECUTE")
-    .trim()
-    .toUpperCase();
-
-  const isLogged = loggedOrderIds.includes(orderId);
-
-  return executeStatus !== "SKIP" && !isLogged;
-})
-.map((o, i) => {
-  const orderId = `BUY-${o.id || o.symbol || i}`;
-                  const executeStatus = String(o.execute || "EXECUTE")
-                    .trim()
-                    .toUpperCase();
-                  return executeStatus !== "SKIP" && !loggedOrderIds.includes(orderId);
-                })
-                .map((o, i) => {
+              {visibleBuyOrders.map((o, i) => {
                 const orderId = `BUY-${o.id || o.symbol || i}`;
                 const edit = getOrderEdit(o, "BUY");
                 const isLogged = loggedOrderIds.includes(orderId);
