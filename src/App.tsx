@@ -143,15 +143,7 @@ function EInput({
   };
 
   if (options) {
-    const visibleBuyOrders = buyOrders.filter((o, i) => {
-    const orderId = `BUY-${o.id || o.symbol || i}`;
-    const executeStatus = String(o.execute || "EXECUTE")
-      .trim()
-      .toUpperCase();
-    return executeStatus !== "SKIP" && !loggedOrderIds.includes(orderId);
-  });
-
-  return (
+    return (
       <select
         value={val}
         disabled={disabled}
@@ -451,9 +443,9 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
               units: o.units ?? o.buyUnits ?? 0,
               cash:
                 o.cash ?? o.cashUsed ?? o.actualBuyValue ?? o.suggestedBuy ?? 0,
-              status: o.status || o.statusNote || o.note || "BUY",
+              status: o.status || o.statusNote || "BUY",
               note: o.note || "",
-              execute: String(o.execute || "").trim().toUpperCase(),
+              execute: String(o.execute || o.note || "").trim().toUpperCase(),
             }))
         );
       } else {
@@ -1041,6 +1033,15 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
     actual: m.target > 0 ? Math.min((m.current / m.target) * 100, 100) : 0,
     target: 100,
   }));
+
+  const visibleBuyOrders = buyOrders.filter((o, i) => {
+    const orderId = `BUY-${o.id || o.symbol || i}`;
+    const executeStatus = String(o.execute || o.note || "EXECUTE")
+      .trim()
+      .toUpperCase();
+
+    return executeStatus !== "SKIP" && !loggedOrderIds.includes(orderId);
+  });
 
   return (
     <div
