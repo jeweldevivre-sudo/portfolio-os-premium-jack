@@ -1982,7 +1982,17 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
 
               {buyOrders
                 .filter((o, i) => {
-                  const orderId = `BUY-${o.id || o.symbol || i}`;
+  const orderId = `BUY-${o.id || o.symbol || i}`;
+  const executeStatus = String(o.execute || "EXECUTE")
+    .trim()
+    .toUpperCase();
+
+  const isLogged = loggedOrderIds.includes(orderId);
+
+  return executeStatus !== "SKIP" && !isLogged;
+})
+.map((o, i) => {
+  const orderId = `BUY-${o.id || o.symbol || i}`;
                   const executeStatus = String(o.execute || "EXECUTE")
                     .trim()
                     .toUpperCase();
