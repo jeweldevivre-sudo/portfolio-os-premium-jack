@@ -4121,55 +4121,6 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                       </ResponsiveContainer>
                     </div>
 
-                    <div
-                      style={{
-                        gridColumn: isMobile ? "auto" : "1 / span 2",
-                        background: "#080e1c",
-                        border: "1px solid #1a2540",
-                        borderRadius: 12,
-                        padding: "16px 14px",
-                      }}
-                    >
-                      <div style={ST}>Average Outcome % by Reason</div>
-                      <ResponsiveContainer
-                        width="100%"
-                        height={isMobile ? 220 : 240}
-                      >
-                        <BarChart data={decisionAverageByNote}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#1a2540"
-                            vertical={false}
-                          />
-                          <XAxis
-                            dataKey="name"
-                            tick={{ fill: "#7d8ea5", fontSize: 10 }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            tick={{ fill: "#7d8ea5", fontSize: 10 }}
-                            axisLine={false}
-                            tickLine={false}
-                            tickFormatter={(v) => `${v}%`}
-                            width={45}
-                          />
-                          <RechartsTooltip
-                            contentStyle={{
-                              background: "#0d1526",
-                              border: "1px solid #1a2540",
-                              borderRadius: 8,
-                            }}
-                          />
-                          <Bar
-                            dataKey="avgOutcomePercent"
-                            name="Avg Outcome %"
-                            fill="#60a5fa"
-                            radius={[4, 4, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
                   </div>
                 </>
               )}
