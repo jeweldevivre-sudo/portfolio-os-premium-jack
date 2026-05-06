@@ -1082,6 +1082,38 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
         decisionTrendData.length
       : 0;
 
+  const decisionCount = decisionTrendData.length;
+
+  const followSystemCount = decisionTrendData.filter(
+    (d) => String(d.note || "").trim() === "Follow System"
+  ).length;
+
+  const followSystemRate =
+    decisionCount > 0 ? (followSystemCount / decisionCount) * 100 : 0;
+
+  const decisionAverageByNote = Object.values(
+    decisionTrendData.reduce((acc, d) => {
+      const key = String(d.note || "Unknown").trim() || "Unknown";
+      if (!acc[key]) {
+        acc[key] = {
+          note: key,
+          count: 0,
+          totalScore: 0,
+          totalOutcome: 0,
+        };
+      }
+      acc[key].count += 1;
+      acc[key].totalScore += num(d.score);
+      acc[key].totalOutcome += num(d.outcomePercent);
+      return acc;
+    }, {})
+  ).map((d: any) => ({
+    name: d.note,
+    count: d.count,
+    avgScore: d.count > 0 ? d.totalScore / d.count : 0,
+    avgOutcomePercent: d.count > 0 ? d.totalOutcome / d.count : 0,
+  }));
+
   return (
     <div
       style={{
@@ -3854,88 +3886,8 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                   <div
                     style={{ fontSize: 11, color: "#64748b", lineHeight: 1.45 }}
                   >
-                    A simple feedback loop from Decision Log: outcome, score,
-                    and decision reason.
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 10,
-                    flexWrap: "wrap",
-                    width: isMobile ? "100%" : "auto",
-                  }}
-                >
-                  <div
-                    style={{
-                      background: "#080e1c",
-                      border: "1px solid #1a2540",
-                      borderRadius: 10,
-                      padding: "9px 12px",
-                      flex: isMobile ? "1 1 100%" : "0 0 auto",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 9,
-                        color: "#64748b",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        fontWeight: 800,
-                        marginBottom: 4,
-                      }}
-                    >
-                      Avg Score
-                    </div>
-                    <div
-                      style={{
-                        color: "#a78bfa",
-                        fontFamily: "'DM Mono', monospace",
-                        fontWeight: 800,
-                        fontSize: 16,
-                      }}
-                    >
-                      {fmt(averageDecisionScore, 2)}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      background: "#080e1c",
-                      border: "1px solid #1a2540",
-                      borderRadius: 10,
-                      padding: "9px 12px",
-                      flex: isMobile ? "1 1 100%" : "0 0 auto",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 9,
-                        color: "#64748b",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        fontWeight: 800,
-                        marginBottom: 4,
-                      }}
-                    >
-                      Avg Outcome
-                    </div>
-                    <div
-                      style={{
-                        color:
-                          averageOutcomePercent > 0
-                            ? "#34d399"
-                            : averageOutcomePercent < 0
-                            ? "#f87171"
-                            : "#f59e0b",
-                        fontFamily: "'DM Mono', monospace",
-                        fontWeight: 800,
-                        fontSize: 16,
-                      }}
-                    >
-                      {averageOutcomePercent > 0 ? "+" : ""}
-                      {fmt(averageOutcomePercent, 2)}%
-                    </div>
+                    Average decision quality from Decision Log. This stays
+                    readable even when you have hundreds of records.
                   </div>
                 </div>
               </div>
@@ -3955,168 +3907,257 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                   No decision log data yet
                 </div>
               ) : (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: isMobile ? "1fr" : "1.4fr 1fr",
-                    gap: 14,
-                  }}
-                >
+                <>
                   <div
                     style={{
-                      background: "#080e1c",
-                      border: "1px solid #1a2540",
-                      borderRadius: 12,
-                      padding: "16px 14px",
+                      display: "grid",
+                      gridTemplateColumns: isMobile
+                        ? "1fr"
+                        : "repeat(4,1fr)",
+                      gap: 12,
+                      marginBottom: 14,
                     }}
                   >
-                    <div style={ST}>Decision Score Trend</div>
-                    <ResponsiveContainer
-                      width="100%"
-                      height={isMobile ? 200 : 230}
-                    >
-                      <LineChart data={decisionTrendData}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="#1a2540"
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fill: "#7d8ea5", fontSize: 10 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          domain={[0, 3]}
-                          tick={{ fill: "#7d8ea5", fontSize: 10 }}
-                          axisLine={false}
-                          tickLine={false}
-                          width={35}
-                        />
-                        <RechartsTooltip
-                          contentStyle={{
-                            background: "#0d1526",
-                            border: "1px solid #1a2540",
-                            borderRadius: 8,
+                    {[
+                      {
+                        label: "Avg Score",
+                        value: fmt(averageDecisionScore, 2),
+                        color: "#a78bfa",
+                        sub: "Good = 3 / Neutral = 1 / Bad = 0",
+                      },
+                      {
+                        label: "Avg Outcome",
+                        value: `${averageOutcomePercent > 0 ? "+" : ""}${fmt(
+                          averageOutcomePercent,
+                          2
+                        )}%`,
+                        color:
+                          averageOutcomePercent > 0
+                            ? "#34d399"
+                            : averageOutcomePercent < 0
+                            ? "#f87171"
+                            : "#f59e0b",
+                        sub: "Average outcome after decision",
+                      },
+                      {
+                        label: "Follow System Rate",
+                        value: `${fmt(followSystemRate, 2)}%`,
+                        color: "#60a5fa",
+                        sub: `${followSystemCount} of ${decisionCount} decisions`,
+                      },
+                      {
+                        label: "Decision Count",
+                        value: decisionCount.toLocaleString(),
+                        color: "#f59e0b",
+                        sub: "Total logged decisions",
+                      },
+                    ].map((m) => (
+                      <div
+                        key={m.label}
+                        style={{
+                          background: "#080e1c",
+                          border: "1px solid #1a2540",
+                          borderRadius: 12,
+                          padding: "12px 14px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: "#64748b",
+                            marginBottom: 5,
+                            fontWeight: 800,
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
                           }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="score"
-                          name="Score"
-                          stroke="#a78bfa"
-                          strokeWidth={2}
-                          dot={{ r: 4 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div
-                    style={{
-                      background: "#080e1c",
-                      border: "1px solid #1a2540",
-                      borderRadius: 12,
-                      padding: "16px 14px",
-                    }}
-                  >
-                    <div style={ST}>Decision Status</div>
-                    <ResponsiveContainer
-                      width="100%"
-                      height={isMobile ? 200 : 230}
-                    >
-                      <PieChart>
-                        <Pie
-                          data={decisionStatusData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={isMobile ? 34 : 46}
-                          outerRadius={isMobile ? 68 : 82}
-                          paddingAngle={4}
                         >
-                          {decisionStatusData.map((d, i) => (
-                            <Cell
-                              key={i}
-                              fill={
-                                String(d.rawStatus || "").includes("Good")
-                                  ? "#34d399"
-                                  : String(d.rawStatus || "").includes("Bad")
-                                  ? "#f87171"
-                                  : "#f59e0b"
-                              }
-                            />
-                          ))}
-                        </Pie>
-                        <RechartsTooltip
-                          contentStyle={{
-                            background: "#0d1526",
-                            border: "1px solid #1a2540",
-                            borderRadius: 8,
+                          {m.label}
+                        </div>
+                        <div
+                          style={{
+                            color: m.color,
+                            fontFamily: "'DM Mono', monospace",
+                            fontWeight: 800,
+                            fontSize: 20,
+                            marginBottom: 5,
                           }}
-                        />
-                        <Legend
-                          wrapperStyle={{
-                            fontSize: 11,
-                            color: "#7d8ea5",
+                        >
+                          {m.value}
+                        </div>
+                        <div
+                          style={{
+                            color: "#4b607b",
+                            fontSize: 10,
+                            lineHeight: 1.45,
                           }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+                        >
+                          {m.sub}
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   <div
                     style={{
-                      gridColumn: isMobile ? "auto" : "1 / span 2",
-                      background: "#080e1c",
-                      border: "1px solid #1a2540",
-                      borderRadius: 12,
-                      padding: "16px 14px",
+                      display: "grid",
+                      gridTemplateColumns: isMobile ? "1fr" : "1.4fr 1fr",
+                      gap: 14,
                     }}
                   >
-                    <div style={ST}>Outcome % by Decision</div>
-                    <ResponsiveContainer
-                      width="100%"
-                      height={isMobile ? 200 : 220}
+                    <div
+                      style={{
+                        background: "#080e1c",
+                        border: "1px solid #1a2540",
+                        borderRadius: 12,
+                        padding: "16px 14px",
+                      }}
                     >
-                      <BarChart data={decisionTrendData}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="#1a2540"
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fill: "#7d8ea5", fontSize: 10 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fill: "#7d8ea5", fontSize: 10 }}
-                          axisLine={false}
-                          tickLine={false}
-                          tickFormatter={(v) => `${v}%`}
-                          width={45}
-                        />
-                        <RechartsTooltip
-                          contentStyle={{
-                            background: "#0d1526",
-                            border: "1px solid #1a2540",
-                            borderRadius: 8,
-                          }}
-                        />
-                        <Bar
-                          dataKey="outcomePercent"
-                          name="Outcome %"
-                          fill="#60a5fa"
-                          radius={[4, 4, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
+                      <div style={ST}>Average Score by Reason</div>
+                      <ResponsiveContainer
+                        width="100%"
+                        height={isMobile ? 220 : 250}
+                      >
+                        <BarChart data={decisionAverageByNote}>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#1a2540"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{ fill: "#7d8ea5", fontSize: 10 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            domain={[0, 3]}
+                            tick={{ fill: "#7d8ea5", fontSize: 10 }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={35}
+                          />
+                          <RechartsTooltip
+                            contentStyle={{
+                              background: "#0d1526",
+                              border: "1px solid #1a2540",
+                              borderRadius: 8,
+                            }}
+                          />
+                          <Bar
+                            dataKey="avgScore"
+                            name="Avg Score"
+                            fill="#a78bfa"
+                            radius={[4, 4, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div
+                      style={{
+                        background: "#080e1c",
+                        border: "1px solid #1a2540",
+                        borderRadius: 12,
+                        padding: "16px 14px",
+                      }}
+                    >
+                      <div style={ST}>Decision Status</div>
+                      <ResponsiveContainer
+                        width="100%"
+                        height={isMobile ? 220 : 250}
+                      >
+                        <PieChart>
+                          <Pie
+                            data={decisionStatusData}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={isMobile ? 34 : 46}
+                            outerRadius={isMobile ? 68 : 82}
+                            paddingAngle={4}
+                          >
+                            {decisionStatusData.map((d, i) => (
+                              <Cell
+                                key={i}
+                                fill={
+                                  String(d.rawStatus || "").includes("Good")
+                                    ? "#34d399"
+                                    : String(d.rawStatus || "").includes("Bad")
+                                    ? "#f87171"
+                                    : "#f59e0b"
+                                }
+                              />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip
+                            contentStyle={{
+                              background: "#0d1526",
+                              border: "1px solid #1a2540",
+                              borderRadius: 8,
+                            }}
+                          />
+                          <Legend
+                            wrapperStyle={{
+                              fontSize: 11,
+                              color: "#7d8ea5",
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div
+                      style={{
+                        gridColumn: isMobile ? "auto" : "1 / span 2",
+                        background: "#080e1c",
+                        border: "1px solid #1a2540",
+                        borderRadius: 12,
+                        padding: "16px 14px",
+                      }}
+                    >
+                      <div style={ST}>Average Outcome % by Reason</div>
+                      <ResponsiveContainer
+                        width="100%"
+                        height={isMobile ? 220 : 240}
+                      >
+                        <BarChart data={decisionAverageByNote}>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#1a2540"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{ fill: "#7d8ea5", fontSize: 10 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tick={{ fill: "#7d8ea5", fontSize: 10 }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickFormatter={(v) => `${v}%`}
+                            width={45}
+                          />
+                          <RechartsTooltip
+                            contentStyle={{
+                              background: "#0d1526",
+                              border: "1px solid #1a2540",
+                              borderRadius: 8,
+                            }}
+                          />
+                          <Bar
+                            dataKey="avgOutcomePercent"
+                            name="Avg Outcome %"
+                            fill="#60a5fa"
+                            radius={[4, 4, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
 
