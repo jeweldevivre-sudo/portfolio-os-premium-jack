@@ -8,6 +8,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -19,7 +21,7 @@ import {
 } from "recharts";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbwMgrLUUyumgK797jFN9xIjktO5bX0tFM2pKBsPbXdkZekYcsuBmOYhWj0PB4n_5ban/exec";
+  "https://script.google.com/macros/s/AKfycbyDJIM29AJyBgZ9DezLqOX-KWcLTR7af2M5XUEHzQ2HVtM-aAKH-Auw22EI2GNqECo0/exec";
 
 const DEFAULT_TARGETS = {
   totalWealth: 5000000,
@@ -252,6 +254,10 @@ function App() {
 
  const [buyOrders, setBuyOrders] = useState<any[]>([]);
 const [sellOrders, setSellOrders] = useState<any[]>([]);
+const [decisionAnalytics, setDecisionAnalytics] = useState({
+  trend: [],
+  status: [],
+});
 const [originalPortfolioSymbols, setOriginalPortfolioSymbols] = useState<string[]>([]);
 const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>([]);
   const [decisionSaved, setDecisionSaved] = useState(false);
@@ -296,6 +302,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       const apiPortfolio = data.portfolio || data.holdings || [];
       const apiSellOrders = data.sellAlerts || data.sellOrders || [];
       const apiBuyOrders = data.buyOrders || [];
+      const apiDecisionAnalytics = data.decisionAnalytics || { trend: [], status: [] };
       const apiPhaseControl = data.phaseControl || {};
 
       setPortfolioName(
@@ -471,6 +478,22 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       } else {
         setSellOrders([]);
       }
+
+      setDecisionAnalytics({
+        trend: Array.isArray(apiDecisionAnalytics.trend)
+          ? apiDecisionAnalytics.trend.map((d) => ({
+              ...d,
+              score: num(d.score),
+              outcomePercent: num(d.outcomePercent),
+            }))
+          : [],
+        status: Array.isArray(apiDecisionAnalytics.status)
+          ? apiDecisionAnalytics.status.map((d) => ({
+              status: d.status,
+              count: num(d.count),
+            }))
+          : [],
+      });
     } catch (err: any) {
       console.error("Load error:", err);
       setLoadError(err.message || "Load error");
@@ -803,10 +826,6 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
             osType: normalizeHoldingType(h.type),
             units: h.units === "" ? "" : Number(h.units),
             avgCost: h.avgCost === "" ? "" : Number(h.avgCost),
-            targetWeight:
-              h.targetWeight === "" || h.targetWeight === undefined
-                ? ""
-                : targetPct(h.targetWeight) / 100,
           })),
       };
 
@@ -1037,6 +1056,31 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
     actual: m.target > 0 ? Math.min((m.current / m.target) * 100, 100) : 0,
     target: 100,
   }));
+
+  const decisionTrendData = (decisionAnalytics.trend || []).map((d, i) => ({
+    name: `D${i + 1}`,
+    note: d.note || "",
+    score: num(d.score),
+    outcomePercent: num(d.outcomePercent),
+  }));
+
+  const decisionStatusData = (decisionAnalytics.status || []).map((d) => ({
+    name: String(d.status || "").replace(/[🟢🟡🔴]/g, "").trim() || String(d.status || "Status"),
+    value: num(d.count),
+    rawStatus: d.status,
+  }));
+
+  const averageDecisionScore =
+    decisionTrendData.length > 0
+      ? decisionTrendData.reduce((s, d) => s + num(d.score), 0) /
+        decisionTrendData.length
+      : 0;
+
+  const averageOutcomePercent =
+    decisionTrendData.length > 0
+      ? decisionTrendData.reduce((s, d) => s + num(d.outcomePercent), 0) /
+        decisionTrendData.length
+      : 0;
 
   return (
     <div
@@ -3209,17 +3253,21 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                                 width="72px"
                               />
                             </td>
-                            <td style={{ padding: "4px 5px" }}>
-                              <EInput
-                                val={
-                                  h.targetWeight === "" || h.targetWeight === undefined
-                                    ? ""
-                                    : targetPct(h.targetWeight).toFixed(2)
-                                }
-                                onChange={(v) => updateHolding(i, "targetWeight", v)}
-                                placeholder="0.00"
-                                width="72px"
-                              />
+                            <td
+                              style={{
+                                padding: "6px 10px",
+                                textAlign: "right",
+                                fontSize: 12,
+                                fontFamily: "'DM Mono', monospace",
+                                color:
+                                  targetPct(h.targetWeight) > 0
+                                    ? "#60a5fa"
+                                    : "#64748b",
+                                fontWeight: 800,
+                                letterSpacing: "0.01em",
+                              }}
+                            >
+                              {fmtPct(h.targetWeight, 0)}
                             </td>
                             <td
                               style={{
@@ -3786,6 +3834,290 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                   );
                 })}
               </div>
+            </div>
+
+            <div className={card} style={{ padding: isMobile ? 16 : 22 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: isMobile ? "flex-start" : "center",
+                  gap: 12,
+                  flexDirection: isMobile ? "column" : "row",
+                  marginBottom: 14,
+                }}
+              >
+                <div>
+                  <div style={{ ...ST, marginBottom: 4 }}>
+                    Decision Quality
+                  </div>
+                  <div
+                    style={{ fontSize: 11, color: "#64748b", lineHeight: 1.45 }}
+                  >
+                    A simple feedback loop from Decision Log: outcome, score,
+                    and decision reason.
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    width: isMobile ? "100%" : "auto",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "#080e1c",
+                      border: "1px solid #1a2540",
+                      borderRadius: 10,
+                      padding: "9px 12px",
+                      flex: isMobile ? "1 1 100%" : "0 0 auto",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 9,
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        fontWeight: 800,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Avg Score
+                    </div>
+                    <div
+                      style={{
+                        color: "#a78bfa",
+                        fontFamily: "'DM Mono', monospace",
+                        fontWeight: 800,
+                        fontSize: 16,
+                      }}
+                    >
+                      {fmt(averageDecisionScore, 2)}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      background: "#080e1c",
+                      border: "1px solid #1a2540",
+                      borderRadius: 10,
+                      padding: "9px 12px",
+                      flex: isMobile ? "1 1 100%" : "0 0 auto",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 9,
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        fontWeight: 800,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Avg Outcome
+                    </div>
+                    <div
+                      style={{
+                        color:
+                          averageOutcomePercent > 0
+                            ? "#34d399"
+                            : averageOutcomePercent < 0
+                            ? "#f87171"
+                            : "#f59e0b",
+                        fontFamily: "'DM Mono', monospace",
+                        fontWeight: 800,
+                        fontSize: 16,
+                      }}
+                    >
+                      {averageOutcomePercent > 0 ? "+" : ""}
+                      {fmt(averageOutcomePercent, 2)}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {decisionTrendData.length === 0 ? (
+                <div
+                  style={{
+                    background: "#080e1c",
+                    borderRadius: 12,
+                    padding: "26px 20px",
+                    textAlign: "center",
+                    border: "1px dashed #1a2540",
+                    color: "#5f728a",
+                    fontSize: 13,
+                  }}
+                >
+                  No decision log data yet
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "1.4fr 1fr",
+                    gap: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "#080e1c",
+                      border: "1px solid #1a2540",
+                      borderRadius: 12,
+                      padding: "16px 14px",
+                    }}
+                  >
+                    <div style={ST}>Decision Score Trend</div>
+                    <ResponsiveContainer
+                      width="100%"
+                      height={isMobile ? 200 : 230}
+                    >
+                      <LineChart data={decisionTrendData}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="#1a2540"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fill: "#7d8ea5", fontSize: 10 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          domain={[0, 3]}
+                          tick={{ fill: "#7d8ea5", fontSize: 10 }}
+                          axisLine={false}
+                          tickLine={false}
+                          width={35}
+                        />
+                        <RechartsTooltip
+                          contentStyle={{
+                            background: "#0d1526",
+                            border: "1px solid #1a2540",
+                            borderRadius: 8,
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="score"
+                          name="Score"
+                          stroke="#a78bfa"
+                          strokeWidth={2}
+                          dot={{ r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div
+                    style={{
+                      background: "#080e1c",
+                      border: "1px solid #1a2540",
+                      borderRadius: 12,
+                      padding: "16px 14px",
+                    }}
+                  >
+                    <div style={ST}>Decision Status</div>
+                    <ResponsiveContainer
+                      width="100%"
+                      height={isMobile ? 200 : 230}
+                    >
+                      <PieChart>
+                        <Pie
+                          data={decisionStatusData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={isMobile ? 34 : 46}
+                          outerRadius={isMobile ? 68 : 82}
+                          paddingAngle={4}
+                        >
+                          {decisionStatusData.map((d, i) => (
+                            <Cell
+                              key={i}
+                              fill={
+                                String(d.rawStatus || "").includes("Good")
+                                  ? "#34d399"
+                                  : String(d.rawStatus || "").includes("Bad")
+                                  ? "#f87171"
+                                  : "#f59e0b"
+                              }
+                            />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip
+                          contentStyle={{
+                            background: "#0d1526",
+                            border: "1px solid #1a2540",
+                            borderRadius: 8,
+                          }}
+                        />
+                        <Legend
+                          wrapperStyle={{
+                            fontSize: 11,
+                            color: "#7d8ea5",
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div
+                    style={{
+                      gridColumn: isMobile ? "auto" : "1 / span 2",
+                      background: "#080e1c",
+                      border: "1px solid #1a2540",
+                      borderRadius: 12,
+                      padding: "16px 14px",
+                    }}
+                  >
+                    <div style={ST}>Outcome % by Decision</div>
+                    <ResponsiveContainer
+                      width="100%"
+                      height={isMobile ? 200 : 220}
+                    >
+                      <BarChart data={decisionTrendData}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="#1a2540"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fill: "#7d8ea5", fontSize: 10 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fill: "#7d8ea5", fontSize: 10 }}
+                          axisLine={false}
+                          tickLine={false}
+                          tickFormatter={(v) => `${v}%`}
+                          width={45}
+                        />
+                        <RechartsTooltip
+                          contentStyle={{
+                            background: "#0d1526",
+                            border: "1px solid #1a2540",
+                            borderRadius: 8,
+                          }}
+                        />
+                        <Bar
+                          dataKey="outcomePercent"
+                          name="Outcome %"
+                          fill="#60a5fa"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div
