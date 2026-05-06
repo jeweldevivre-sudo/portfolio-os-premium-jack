@@ -1114,6 +1114,15 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
     avgOutcomePercent: d.count > 0 ? d.totalOutcome / d.count : 0,
   }));
 
+  const decisionRadarData = DECISION_NOTE_OPTIONS.map((note) => {
+    const found = decisionAverageByNote.find((d: any) => d.name === note);
+    return {
+      reason: note,
+      avgScore: found ? num((found as any).avgScore) : 0,
+      fullScore: 3,
+    };
+  });
+
   return (
     <div
       style={{
@@ -4012,29 +4021,34 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                         padding: "16px 14px",
                       }}
                     >
-                      <div style={ST}>Average Score by Reason</div>
+                      <div style={ST}>Behavior Radar — Avg Score</div>
                       <ResponsiveContainer
                         width="100%"
-                        height={isMobile ? 220 : 250}
+                        height={isMobile ? 240 : 270}
                       >
-                        <BarChart data={decisionAverageByNote}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#1a2540"
-                            vertical={false}
-                          />
-                          <XAxis
-                            dataKey="name"
+                        <RadarChart data={decisionRadarData}>
+                          <PolarGrid stroke="#1a2540" />
+                          <PolarAngleAxis
+                            dataKey="reason"
                             tick={{ fill: "#7d8ea5", fontSize: 10 }}
-                            axisLine={false}
-                            tickLine={false}
                           />
-                          <YAxis
-                            domain={[0, 3]}
-                            tick={{ fill: "#7d8ea5", fontSize: 10 }}
-                            axisLine={false}
-                            tickLine={false}
-                            width={35}
+                          <YAxis domain={[0, 3]} hide />
+                          <Radar
+                            name="Full Score"
+                            dataKey="fullScore"
+                            stroke="#334155"
+                            fill="#334155"
+                            fillOpacity={0.08}
+                            strokeOpacity={0.35}
+                            strokeWidth={1}
+                          />
+                          <Radar
+                            name="Avg Score"
+                            dataKey="avgScore"
+                            stroke="#a78bfa"
+                            fill="#a78bfa"
+                            fillOpacity={0.28}
+                            strokeWidth={2}
                           />
                           <RechartsTooltip
                             contentStyle={{
@@ -4043,13 +4057,13 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                               borderRadius: 8,
                             }}
                           />
-                          <Bar
-                            dataKey="avgScore"
-                            name="Avg Score"
-                            fill="#a78bfa"
-                            radius={[4, 4, 0, 0]}
+                          <Legend
+                            wrapperStyle={{
+                              fontSize: 11,
+                              color: "#7d8ea5",
+                            }}
                           />
-                        </BarChart>
+                        </RadarChart>
                       </ResponsiveContainer>
                     </div>
 
