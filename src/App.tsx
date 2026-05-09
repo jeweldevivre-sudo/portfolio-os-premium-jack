@@ -21,7 +21,7 @@ import {
 } from "recharts";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbwqRa8uCQAyE1LKwdWKq1pHUl580C-drzHRr9EfBlOY_epKCiwdJqwAvWOV5sHzNlID/exec";
+  "https://script.google.com/macros/s/AKfycbxAMbgKDx1jD5vMT094z9YPcgnI5GFlsN4RuVkHyNl1qQ6nyOLnTQqV-cdUftT-J9D-/exec";
 
 const DEFAULT_TARGETS = {
   totalWealth: 5000000,
@@ -52,8 +52,6 @@ const DECISION_NOTE_OPTIONS = [
   "Follow System",
   "Add on Dip",
   "Reduce Risk",
-  "Manual Override",
-  "Off-System",
 ];
 
 const normalizeHoldingType = (...values: any[]) => {
@@ -263,11 +261,9 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
   const [decisionSaved, setDecisionSaved] = useState(false);
   const [decisionForm, setDecisionForm] = useState({
     assetCode: "",
-    systemSuggest: "BUY",
-    systemPrice: "",
+    action: "BUY",
     units: "",
-    youDid: "BUY",
-    buySellPrice: "",
+    price: "",
   });
 
   const [orderEdits, setOrderEdits] = useState({});
@@ -679,6 +675,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
         },
         body: JSON.stringify({
           action: "logDecision",
+          source: "SYSTEM",
           actionType,
           assetCode,
           youDid: actionType,
@@ -716,25 +713,20 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       const assetCode = String(decisionForm.assetCode || "")
         .trim()
         .toUpperCase();
-      const systemSuggest = String(decisionForm.systemSuggest || "")
-        .trim()
-        .toUpperCase();
-      const youDid = String(decisionForm.youDid || "")
+      const actionType = String(decisionForm.action || "")
         .trim()
         .toUpperCase();
       const units = num(decisionForm.units);
-      const systemPrice = num(decisionForm.systemPrice);
-      const buySellPrice = num(decisionForm.buySellPrice);
+      const price = num(decisionForm.price);
 
       if (
         !assetCode ||
-        !systemSuggest ||
-        !youDid ||
+        !actionType ||
         units <= 0 ||
-        buySellPrice <= 0
+        price <= 0
       ) {
         alert(
-          "Please fill Asset Code, System Suggest, Units, You Did, and Buy/Sell Price."
+          "Please fill Asset Code, Action, Units, and Price."
         );
         return;
       }
@@ -749,16 +741,19 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
         },
         body: JSON.stringify({
           action: "logDecision",
+          source: "OFF_SYSTEM",
+          actionType,
           assetCode,
-          systemSuggest,
-          suggestedPrice: systemPrice || buySellPrice,
-          systemPrice: systemPrice || buySellPrice,
-          suggestedUnits: units,
+          suggestedPrice: price,
+          systemPrice: price,
+          suggestedUnits: 0,
           actualUnits: units,
-          actualPrice: buySellPrice,
+          actualPrice: price,
+          marketPrice: price,
           units,
-          youDid,
-          buySellPrice,
+          youDid: actionType,
+          buySellPrice: price,
+          note: "OFF_SYSTEM",
         }),
       });
 
@@ -773,11 +768,9 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
 
       setDecisionForm({
         assetCode: "",
-        systemSuggest: "BUY",
-        systemPrice: "",
+        action: "BUY",
         units: "",
-        youDid: "BUY",
-        buySellPrice: "",
+        price: "",
       });
 
       await loadPortfolioFromSheet();
@@ -2865,35 +2858,41 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 })}
               </div>
             </div>
-          </div>
-        )}
 
-        {tab === "record" && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-              gap: 16,
-            }}
-          >
-            <div className={card} style={{ padding: isMobile ? 16 : 22 }}>
-              <div style={ST}>Buy / Sell Record</div>
+            <div
+              className={card}
+              style={{
+                padding: isMobile ? 16 : 22,
+                gridColumn: "1 / -1",
+              }}
+            >
               <div
                 style={{
-                  color: "#7d8ea5",
-                  fontSize: 12,
-                  lineHeight: 1.6,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: isMobile ? "flex-start" : "center",
+                  flexDirection: isMobile ? "column" : "row",
+                  gap: 10,
                   marginBottom: 16,
                 }}
               >
-                Record the actual trade after you execute it in your broker app.
-                This will update DECISION LOG and activate Anti-Flip protection.
+                <div style={{ ...ST, marginBottom: 0 }}>Manual Override</div>
+                <span
+                  className="pill"
+                  style={{
+                    background: "#2a1f0a",
+                    border: "1px solid #7c5c12",
+                    color: "#fbbf24",
+                  }}
+                >
+                  OFF_SYSTEM
+                </span>
               </div>
 
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 0.8fr 0.8fr 0.8fr",
                   gap: 12,
                 }}
               >
@@ -2907,7 +2906,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                         assetCode: e.target.value.toUpperCase(),
                       }))
                     }
-                    placeholder="e.g. BBIK"
+                    placeholder="e.g. SPALI"
                     style={{
                       width: "100%",
                       background: "#0d1526",
@@ -2924,13 +2923,13 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 </div>
 
                 <div>
-                  <div style={ST}>System Suggest</div>
+                  <div style={ST}>Action</div>
                   <select
-                    value={decisionForm.systemSuggest}
+                    value={decisionForm.action}
                     onChange={(e) =>
                       setDecisionForm((p) => ({
                         ...p,
-                        systemSuggest: e.target.value,
+                        action: e.target.value,
                       }))
                     }
                     style={{
@@ -2938,44 +2937,18 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                       background: "#0d1526",
                       border: "1px solid #1d2a3d",
                       borderRadius: 10,
-                      color: "#e2e8f0",
+                      color:
+                        decisionForm.action === "SELL" ? "#f87171" : "#34d399",
                       fontSize: 14,
                       fontFamily: "'DM Mono', monospace",
                       padding: "10px 12px",
                       outline: "none",
-                      fontWeight: 700,
+                      fontWeight: 800,
                     }}
                   >
                     <option value="BUY">BUY</option>
                     <option value="SELL">SELL</option>
-                    <option value="HOLD">HOLD</option>
                   </select>
-                </div>
-
-                <div>
-                  <div style={ST}>System Price</div>
-                  <input
-                    value={decisionForm.systemPrice}
-                    onChange={(e) =>
-                      setDecisionForm((p) => ({
-                        ...p,
-                        systemPrice: e.target.value,
-                      }))
-                    }
-                    placeholder="0.00"
-                    type="number"
-                    style={{
-                      width: "100%",
-                      background: "#0d1526",
-                      border: "1px solid #1d2a3d",
-                      borderRadius: 10,
-                      color: "#aebacd",
-                      fontSize: 14,
-                      fontFamily: "'DM Mono', monospace",
-                      padding: "10px 12px",
-                      outline: "none",
-                    }}
-                  />
                 </div>
 
                 <div>
@@ -3003,44 +2976,13 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                 </div>
 
                 <div>
-                  <div style={ST}>You Did</div>
-                  <select
-                    value={decisionForm.youDid}
-                    onChange={(e) =>
-                      setDecisionForm((p) => ({ ...p, youDid: e.target.value }))
-                    }
-                    style={{
-                      width: "100%",
-                      background: "#0d1526",
-                      border: "1px solid #1d2a3d",
-                      borderRadius: 10,
-                      color:
-                        decisionForm.youDid === "SELL"
-                          ? "#f87171"
-                          : decisionForm.youDid === "BUY"
-                          ? "#34d399"
-                          : "#aebacd",
-                      fontSize: 14,
-                      fontFamily: "'DM Mono', monospace",
-                      padding: "10px 12px",
-                      outline: "none",
-                      fontWeight: 800,
-                    }}
-                  >
-                    <option value="BUY">BUY</option>
-                    <option value="SELL">SELL</option>
-                    <option value="HOLD">HOLD</option>
-                  </select>
-                </div>
-
-                <div>
-                  <div style={ST}>Buy / Sell Price</div>
+                  <div style={ST}>Price</div>
                   <input
-                    value={decisionForm.buySellPrice}
+                    value={decisionForm.price}
                     onChange={(e) =>
                       setDecisionForm((p) => ({
                         ...p,
-                        buySellPrice: e.target.value,
+                        price: e.target.value,
                       }))
                     }
                     placeholder="0.00"
@@ -3082,7 +3024,180 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                   width: "100%",
                 }}
               >
-                {decisionSaved ? "✓ Recorded" : "Save Record"}
+                {decisionSaved ? "Recorded" : "Save to Decision Log"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {tab === "record" && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: 16,
+            }}
+          >
+            <div className={card} style={{ padding: isMobile ? 16 : 22 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: isMobile ? "flex-start" : "center",
+                  flexDirection: isMobile ? "column" : "row",
+                  gap: 10,
+                  marginBottom: 16,
+                }}
+              >
+                <div style={{ ...ST, marginBottom: 0 }}>Manual Override</div>
+                <span
+                  className="pill"
+                  style={{
+                    background: "#2a1f0a",
+                    border: "1px solid #7c5c12",
+                    color: "#fbbf24",
+                  }}
+                >
+                  OFF_SYSTEM
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <div style={ST}>Asset Code</div>
+                  <input
+                    value={decisionForm.assetCode}
+                    onChange={(e) =>
+                      setDecisionForm((p) => ({
+                        ...p,
+                        assetCode: e.target.value.toUpperCase(),
+                      }))
+                    }
+                    placeholder="e.g. BBIK"
+                    style={{
+                      width: "100%",
+                      background: "#0d1526",
+                      border: "1px solid #1d2a3d",
+                      borderRadius: 10,
+                      color: "#e2e8f0",
+                      fontSize: 14,
+                      fontFamily: "'DM Mono', monospace",
+                      padding: "10px 12px",
+                      outline: "none",
+                      fontWeight: 700,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div style={ST}>Action</div>
+                  <select
+                    value={decisionForm.action}
+                    onChange={(e) =>
+                      setDecisionForm((p) => ({
+                        ...p,
+                        action: e.target.value,
+                      }))
+                    }
+                    style={{
+                      width: "100%",
+                      background: "#0d1526",
+                      border: "1px solid #1d2a3d",
+                      borderRadius: 10,
+                      color:
+                        decisionForm.action === "SELL" ? "#f87171" : "#34d399",
+                      fontSize: 14,
+                      fontFamily: "'DM Mono', monospace",
+                      padding: "10px 12px",
+                      outline: "none",
+                      fontWeight: 800,
+                    }}
+                  >
+                    <option value="BUY">BUY</option>
+                    <option value="SELL">SELL</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div style={ST}>Units</div>
+                  <input
+                    value={decisionForm.units}
+                    onChange={(e) =>
+                      setDecisionForm((p) => ({ ...p, units: e.target.value }))
+                    }
+                    placeholder="0"
+                    type="number"
+                    style={{
+                      width: "100%",
+                      background: "#0d1526",
+                      border: "1px solid #1d2a3d",
+                      borderRadius: 10,
+                      color: "#e2e8f0",
+                      fontSize: 14,
+                      fontFamily: "'DM Mono', monospace",
+                      padding: "10px 12px",
+                      outline: "none",
+                      fontWeight: 700,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div style={ST}>Price</div>
+                  <input
+                    value={decisionForm.price}
+                    onChange={(e) =>
+                      setDecisionForm((p) => ({
+                        ...p,
+                        price: e.target.value,
+                      }))
+                    }
+                    placeholder="0.00"
+                    type="number"
+                    style={{
+                      width: "100%",
+                      background: "#0d1526",
+                      border: "1px solid #1d2a3d",
+                      borderRadius: 10,
+                      color: "#f59e0b",
+                      fontSize: 14,
+                      fontFamily: "'DM Mono', monospace",
+                      padding: "10px 12px",
+                      outline: "none",
+                      fontWeight: 800,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={saveDecisionRecord}
+                style={{
+                  marginTop: 16,
+                  background: decisionSaved
+                    ? "#06261a"
+                    : "linear-gradient(135deg,#1d4ed8,#2563eb)",
+                  border: `1px solid ${decisionSaved ? "#0d5a3d" : "#3b82f6"}`,
+                  color: decisionSaved ? "#4ade80" : "#fff",
+                  borderRadius: 12,
+                  padding: "14px 18px",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  boxShadow: decisionSaved
+                    ? "none"
+                    : "0 10px 24px rgba(37,99,235,.22)",
+                  width: "100%",
+                }}
+              >
+                {decisionSaved ? "Recorded" : "Save to Decision Log"}
               </button>
             </div>
 
