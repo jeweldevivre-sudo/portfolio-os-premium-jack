@@ -741,7 +741,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
         },
         body: JSON.stringify({
           action: "logDecision",
-          source: "OFF_SYSTEM",
+          source: "MANUAL OVERRIDE",
           actionType,
           assetCode,
           suggestedPrice: price,
