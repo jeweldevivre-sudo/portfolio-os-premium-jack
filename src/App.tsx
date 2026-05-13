@@ -21,7 +21,7 @@ import {
 } from "recharts";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxAMbgKDx1jD5vMT094z9YPcgnI5GFlsN4RuVkHyNl1qQ6nyOLnTQqV-cdUftT-J9D-/exec";
+  "https://script.google.com/macros/s/AKfycbx1S5d15C-1va4QPnu3Czc3s1JDQ7BnTQxC88ZScxIVJUj_caX-Yv3FugCAyuXuttW3/exec";
 
 const DEFAULT_TARGETS = {
   totalWealth: 5000000,
@@ -264,6 +264,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
     action: "BUY",
     units: "",
     price: "",
+    marketPrice: "",
   });
 
   const [orderEdits, setOrderEdits] = useState({});
@@ -718,6 +719,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
         .toUpperCase();
       const units = num(decisionForm.units);
       const price = num(decisionForm.price);
+      const marketPrice = num(decisionForm.marketPrice || decisionForm.price);
 
       if (
         !assetCode ||
@@ -741,15 +743,15 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
         },
         body: JSON.stringify({
           action: "logDecision",
-          source: "MANUAL OVERRIDE",
+          source: "MANUAL_OVERRIDE",
           actionType,
           assetCode,
-          suggestedPrice: price,
-          systemPrice: price,
+          suggestedPrice: marketPrice,
+          systemPrice: marketPrice,
           suggestedUnits: 0,
           actualUnits: units,
           actualPrice: price,
-          marketPrice: price,
+          marketPrice,
           units,
           youDid: actionType,
           buySellPrice: price,
@@ -771,6 +773,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
         action: "BUY",
         units: "",
         price: "",
+        marketPrice: "",
       });
 
       await loadPortfolioFromSheet();
@@ -901,11 +904,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       setLoading(true);
       setLoadError("");
 
-      const progressTargets = {
-        totalWealth: num(targets.totalWealth),
-        dividendValue: num(targets.dividendValue),
-        growthValue: num(targets.growthValue),
-      };
+      const totalWealthTarget = num(targets.totalWealth);
 
       const payload = {
         action: "saveSettings",
@@ -914,16 +913,12 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
         lineAvailable: Number(cash) || 0,
         maxBudget: Number(maxBudget) || 0,
 
-        // Keep original nested structure
-        targets: progressTargets,
-
-        // Add flat aliases for Code.gs versions that write directly to API OUTPUT K4:K6
-        totalWealthTarget: progressTargets.totalWealth,
-        dividendValueTarget: progressTargets.dividendValue,
-        growthValueTarget: progressTargets.growthValue,
-        targetTotalWealth: progressTargets.totalWealth,
-        targetDividendValue: progressTargets.dividendValue,
-        targetGrowthValue: progressTargets.growthValue,
+        // Only Total Wealth is editable. Dividend/Growth targets are formulas in Google Sheets.
+        targets: {
+          totalWealth: totalWealthTarget,
+        },
+        totalWealthTarget,
+        targetTotalWealth: totalWealthTarget,
       };
 
       const res = await fetch(SCRIPT_URL, {
@@ -2892,7 +2887,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 0.8fr 0.8fr 0.8fr",
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 0.8fr 0.8fr 0.8fr 0.8fr",
                   gap: 12,
                 }}
               >
@@ -2983,6 +2978,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                       setDecisionForm((p) => ({
                         ...p,
                         price: e.target.value,
+                        marketPrice: p.marketPrice || e.target.value,
                       }))
                     }
                     placeholder="0.00"
@@ -2993,6 +2989,33 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                       border: "1px solid #1d2a3d",
                       borderRadius: 10,
                       color: "#f59e0b",
+                      fontSize: 14,
+                      fontFamily: "'DM Mono', monospace",
+                      padding: "10px 12px",
+                      outline: "none",
+                      fontWeight: 800,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div style={ST}>Market Price</div>
+                  <input
+                    value={decisionForm.marketPrice}
+                    onChange={(e) =>
+                      setDecisionForm((p) => ({
+                        ...p,
+                        marketPrice: e.target.value,
+                      }))
+                    }
+                    placeholder={decisionForm.price || "0.00"}
+                    type="number"
+                    style={{
+                      width: "100%",
+                      background: "#0d1526",
+                      border: "1px solid #1d2a3d",
+                      borderRadius: 10,
+                      color: "#93c5fd",
                       fontSize: 14,
                       fontFamily: "'DM Mono', monospace",
                       padding: "10px 12px",
@@ -3156,6 +3179,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                       setDecisionForm((p) => ({
                         ...p,
                         price: e.target.value,
+                        marketPrice: p.marketPrice || e.target.value,
                       }))
                     }
                     placeholder="0.00"
@@ -3166,6 +3190,33 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                       border: "1px solid #1d2a3d",
                       borderRadius: 10,
                       color: "#f59e0b",
+                      fontSize: 14,
+                      fontFamily: "'DM Mono', monospace",
+                      padding: "10px 12px",
+                      outline: "none",
+                      fontWeight: 800,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div style={ST}>Market Price</div>
+                  <input
+                    value={decisionForm.marketPrice}
+                    onChange={(e) =>
+                      setDecisionForm((p) => ({
+                        ...p,
+                        marketPrice: e.target.value,
+                      }))
+                    }
+                    placeholder={decisionForm.price || "0.00"}
+                    type="number"
+                    style={{
+                      width: "100%",
+                      background: "#0d1526",
+                      border: "1px solid #1d2a3d",
+                      borderRadius: 10,
+                      color: "#93c5fd",
                       fontSize: 14,
                       fontFamily: "'DM Mono', monospace",
                       padding: "10px 12px",
@@ -3892,6 +3943,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                     "Growth Value": "growthValue",
                   };
                   const targetKey = keyMap[m.label];
+                  const isTotalWealth = m.label === "Total Wealth";
 
                   return (
                     <div
@@ -3938,27 +3990,52 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                       </div>
                       <input
                         value={targets[targetKey]}
-                        onChange={(e) =>
+                        disabled={!isTotalWealth}
+                        title={
+                          isTotalWealth
+                            ? "Edit total wealth target"
+                            : "Auto-calculated from Portfolio Phase"
+                        }
+                        onChange={(e) => {
+                          if (!isTotalWealth) return;
                           setTargets((prev) => ({
                             ...prev,
-                            [targetKey]: e.target.value,
-                          }))
-                        }
+                            totalWealth: e.target.value,
+                          }));
+                        }}
                         style={{
                           width: "100%",
-                          background: "#0d1526",
-                          border: "1px solid #1d2a3d",
+                          background: isTotalWealth ? "#0d1526" : "#0a1220",
+                          border: isTotalWealth
+                            ? "1px solid #1d2a3d"
+                            : "1px solid #162235",
                           borderRadius: 8,
-                          color: m.color,
+                          color: isTotalWealth ? m.color : "#7d8ea5",
                           fontFamily: "'DM Mono', monospace",
                           fontSize: 13,
                           padding: "8px 10px",
                           textAlign: "right",
                           outline: "none",
                           fontWeight: 800,
-                          marginBottom: 10,
+                          marginBottom: 6,
+                          cursor: isTotalWealth ? "text" : "not-allowed",
+                          opacity: 1,
                         }}
                       />
+
+                      {!isTotalWealth && (
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: "#64748b",
+                            marginBottom: 10,
+                            fontFamily: "'DM Mono', monospace",
+                            textAlign: "right",
+                          }}
+                        >
+                          Auto from Portfolio Phase
+                        </div>
+                      )}
 
                       <div
                         className="pbar"
