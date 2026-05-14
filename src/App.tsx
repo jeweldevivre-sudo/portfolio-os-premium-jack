@@ -21,8 +21,7 @@ import {
 } from "recharts";
 
 const SCRIPT_URL =
-  "const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbx2t6tYd-LSLC3nfPgvOX_BIgoaeS4j7jPwjnb3LRqeUAWRufrux7hl0NC0Pq1re3qd/exec";";
+  "https://script.google.com/macros/s/AKfycbx2t6tYd-LSLC3nfPgvOX_BIgoaeS4j7jPwjnb3LRqeUAWRufrux7hl0NC0Pq1re3qd/exec";
 
 const DEFAULT_TARGETS = {
   totalWealth: 5000000,
@@ -253,6 +252,7 @@ function App() {
 
  const [buyOrders, setBuyOrders] = useState<any[]>([]);
 const [sellOrders, setSellOrders] = useState<any[]>([]);
+const [circuitAlerts, setCircuitAlerts] = useState<any[]>([]);
 const [decisionAnalytics, setDecisionAnalytics] = useState({
   trend: [],
   status: [],
@@ -300,6 +300,7 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
       const apiPortfolio = data.portfolio || data.holdings || [];
       const apiSellOrders = data.sellAlerts || data.sellOrders || [];
       const apiBuyOrders = data.buyOrders || [];
+      const apiCircuitAlerts = data.circuitAlerts || [];
       const apiDecisionAnalytics = data.decisionAnalytics || { trend: [], status: [] };
       const apiPhaseControl = data.phaseControl || {};
 
@@ -475,6 +476,26 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
         );
       } else {
         setSellOrders([]);
+      }
+
+      if (Array.isArray(apiCircuitAlerts)) {
+        setCircuitAlerts(
+          apiCircuitAlerts
+            .filter((a) => a && (a.asset || a.assetCode || a.symbol))
+            .map((a, i) => ({
+              id: `circuit-${i}`,
+              asset: String(a.asset || a.assetCode || a.symbol || "")
+                .trim()
+                .toUpperCase(),
+              status: String(a.status || "")
+                .trim()
+                .toUpperCase(),
+              message: String(a.message || "").trim(),
+            }))
+            .filter((a) => a.asset && a.status && a.status !== "NORMAL")
+        );
+      } else {
+        setCircuitAlerts([]);
       }
 
       setDecisionAnalytics({
@@ -2730,6 +2751,105 @@ const [deletedPortfolioSymbols, setDeletedPortfolioSymbols] = useState<string[]>
                             ? "Recorded to Decision Log"
                             : "Done — save to Decision Log"}
                         </label>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className={card} style={{ padding: isMobile ? 16 : 22 }}>
+                <div style={ST}>Circuit Status</div>
+
+                {circuitAlerts.length === 0 ? (
+                  <div
+                    style={{
+                      border: "1px dashed #1d2a3d",
+                      borderRadius: 12,
+                      padding: "18px 16px",
+                      color: "#64748b",
+                      fontSize: 13,
+                      textAlign: "center",
+                    }}
+                  >
+                    No circuit alerts
+                  </div>
+                ) : (
+                  circuitAlerts.map((alert) => {
+                    const isReview = alert.status === "REVIEW";
+                    const isCooling = alert.status === "COOLING";
+                    const borderColor = isReview
+                      ? "#7f1d1d"
+                      : isCooling
+                      ? "#92400e"
+                      : "#334155";
+                    const bgColor = isReview
+                      ? "#1a0f0f"
+                      : isCooling
+                      ? "#1f1708"
+                      : "#080e1c";
+                    const textColor = isReview
+                      ? "#fca5a5"
+                      : isCooling
+                      ? "#fbbf24"
+                      : "#cbd5e1";
+
+                    return (
+                      <div
+                        key={alert.id}
+                        style={{
+                          background: bgColor,
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: 12,
+                          padding: "14px 16px",
+                          marginBottom: 10,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 12,
+                          }}
+                        >
+                          <strong
+                            style={{
+                              color: "#e2e8f0",
+                              fontSize: 13,
+                              letterSpacing: "0.04em",
+                            }}
+                          >
+                            {isReview ? "🔴" : isCooling ? "🟠" : "⚠️"} {alert.asset}
+                          </strong>
+                          <span
+                            style={{
+                              border: `1px solid ${borderColor}`,
+                              borderRadius: 999,
+                              padding: "4px 10px",
+                              color: textColor,
+                              background: "rgba(0,0,0,0.18)",
+                              fontFamily: "'DM Mono', monospace",
+                              fontSize: 11,
+                              fontWeight: 800,
+                            }}
+                          >
+                            {alert.status}
+                          </span>
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: 8,
+                            color: textColor,
+                            fontSize: 12,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {alert.message ||
+                            (isReview
+                              ? "Review position before adding more"
+                              : "Pause averaging before adding more")}
+                        </div>
                       </div>
                     );
                   })
